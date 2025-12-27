@@ -1,6 +1,6 @@
-﻿using Apps_ADM.Application.Common.BaseResponse;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Newtonsoft.Json;
+using ProductHub.Application.Common.BaseResponse;
 
 namespace ProductHub.Middlewares;
 

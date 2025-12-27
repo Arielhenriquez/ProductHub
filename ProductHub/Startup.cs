@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.OpenApi.Models;
 using ProductHub.Filters;
+using ProductHub.Infrastructure;
 using ProductHub.Middlewares;
 using System.Text.Json.Serialization;
 
@@ -42,7 +43,7 @@ public class Startup
         });
 
         services.AddHttpContextAccessor();
-        //services.AddInfrastructure(Configuration);
+        services.AddInfrastructure(Configuration);
         //services.AddApplication();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>

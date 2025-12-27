@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using ProductHub.Domain.Models;
+using ProductHub.Infrastructure.Persistence.Configurations;
 
 namespace ProductHub.Infrastructure.Persistence.Context;
 
@@ -10,4 +11,12 @@ public class ProductHubContext(DbContextOptions options, IHttpContextAccessor co
     public DbSet<Categories>? Categories { get; set; }
     public DbSet<Products>? Products { get; set; }
     public DbSet<Users> Users { get; set; }
+
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new ProductsConfiguration());
+       
+        base.OnModelCreating(modelBuilder);
+    }
 }
