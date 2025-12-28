@@ -19,8 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Categories\" />
-    <Folder Include="Services\" />
+    <Folder Include="Features\Categories\Validators\" />
   </ItemGroup>
 
 </Project>

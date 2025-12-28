@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.OpenApi.Models;
+using ProductHub.Application;
 using ProductHub.Filters;
 using ProductHub.Infrastructure;
 using ProductHub.Middlewares;
@@ -44,7 +45,7 @@ public class Startup
 
         services.AddHttpContextAccessor();
         services.AddInfrastructure(Configuration);
-        //services.AddApplication();
+        services.AddApplication();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
