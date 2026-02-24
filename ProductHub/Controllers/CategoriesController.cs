@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProductHub.Application.Common.BaseResponse;
 using ProductHub.Application.Common.Pagination;
 using ProductHub.Application.Features.Categories.Dtos;
@@ -18,20 +19,18 @@ public class CategoriesController : ControllerBase
         _categoryService = categoryService;
     }
 
-
     [HttpGet("paged")]
-    [SwaggerOperation(
-     Summary = "Gets Paged Categories in the database")]
+    [AllowAnonymous]
+    [SwaggerOperation(Summary = "Gets Paged Categories (public)")]
     public async Task<IActionResult> GetPagedCategories([FromQuery] PaginationQuery query, CancellationToken cancellationToken)
     {
         var collaborators = await _categoryService.GetPagedCategories(query, cancellationToken);
         return Ok(BaseResponse.Ok(collaborators));
     }
 
-
     [HttpGet("{id}")]
-    [SwaggerOperation(
-        Summary = "Get a single category by id")]
+    [AllowAnonymous]
+    [SwaggerOperation(Summary = "Get a single category by id (public)")]
     public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await _categoryService.GetByIdAsync(id, cancellationToken);
@@ -39,8 +38,8 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPost]
-    [SwaggerOperation(
-       Summary = "Creates a new category item")]
+    [Authorize(Roles = "Admin")]
+    [SwaggerOperation(Summary = "Creates a new category item (Admin only)")]
     public async Task<IActionResult> AddInventoryItem([FromBody] CategoryDto categoryDto, CancellationToken cancellationToken)
     {
         var result = await _categoryService.AddAsync(categoryDto, cancellationToken);
@@ -48,22 +47,19 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [SwaggerOperation(
-        Summary = "Updates an  existing Category")]
+    [Authorize(Roles = "Admin")]
+    [SwaggerOperation(Summary = "Updates an existing Category (Admin only)")]
     public async Task<IActionResult> Put([FromRoute] Guid id, [FromBody] CategoryDto request, CancellationToken cancellationToken = default)
     {
         await _categoryService.UpdateAsync(id, request, cancellationToken);
         return Ok(BaseResponse.Updated(request));
     }
 
-
-
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     [SwaggerOperation(
-         Summary = "Deletes an inventory item and logs a comment explaining the reason for deletion",
-         Description = "Deletes an inventory item resource identified by its ID and associates a provided comment as the reason for the deletion. The comment is logged for audit purposes."
+         Summary = "Deletes a category (soft delete, Admin only)"
          )]
-
     public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         await _categoryService.DeleteAsync(id, cancellationToken);

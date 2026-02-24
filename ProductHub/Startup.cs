@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ProductHub.Application;
+using ProductHub.Domain.Settings;
 using ProductHub.Filters;
 using ProductHub.Infrastructure;
 using ProductHub.Middlewares;
@@ -19,17 +22,41 @@ public class Startup
 
     public void RegisterServices(IServiceCollection services)
     {
-       
         services.AddControllers(options =>
         {
             options.Filters.Add<ExceptionFilters>();
         }).AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
-      //  services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-      //.AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAd"));
+        // ──────────────────────────────────────────
+        // JWT Settings
+        // ──────────────────────────────────────────
+        var jwtSettings = Configuration.GetSection("JwtSettings").Get<JwtSettings>()
+            ?? throw new InvalidOperationException("JwtSettings is not configured.");
 
-        services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+        services.Configure<JwtSettings>(Configuration.GetSection("JwtSettings"));
+        services.Configure<StorageOptions>(Configuration.GetSection("BlobStorage"));
+
+        // ──────────────────────────────────────────
+        // JWT Authentication
+        // ──────────────────────────────────────────
+        services.AddAuthentication(options =>
         {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings.Issuer,
+                ValidAudience = jwtSettings.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+            };
+
             options.Events = new JwtBearerEvents
             {
                 OnChallenge = async context =>
@@ -43,6 +70,8 @@ public class Startup
             };
         });
 
+        services.AddAuthorization();
+
         services.AddHttpContextAccessor();
         services.AddInfrastructure(Configuration);
         services.AddApplication();
@@ -54,38 +83,40 @@ public class Startup
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
-                Type = SecuritySchemeType.ApiKey,
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
                 BearerFormat = "JWT",
-                In = ParameterLocation.Header
+                In = ParameterLocation.Header,
+                Description = "Enter your JWT token. Example: Bearer eyJhbGci..."
             });
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
             {
-                new OpenApiSecurityScheme
                 {
-                    Reference = new OpenApiReference
+                    new OpenApiSecurityScheme
                     {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    }
-                },
-                Array.Empty<string>()
-            }
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
         });
-        });
+
         services.AddCors(options =>
         {
-            options.AddPolicy("DevPolicy",
-                builder =>
-                {
-                    builder
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
-                    builder.SetIsOriginAllowed(x => true);
-                });
+            options.AddPolicy("DevPolicy", builder =>
+            {
+                builder.AllowAnyHeader()
+                       .AllowAnyMethod()
+                       .AllowCredentials();
+                builder.SetIsOriginAllowed(x => true);
+            });
         });
     }
+
     public void SetupMiddlewares(WebApplication app)
     {
         app.UseCors("DevPolicy");

@@ -9,7 +9,6 @@ namespace ProductHub.Infrastructure;
 
 public static class Ioc
 {
-
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         string connectionString = configuration.GetConnectionString("DefaultConnection")!;
@@ -17,7 +16,10 @@ public static class Ioc
 
         services.AddTransient<IDbContext, ProductHubContext>();
         services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+        services.AddScoped<IBlobService, BlobService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserService, UserService>();
+
         return services;
     }
-
 }

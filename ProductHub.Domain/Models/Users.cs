@@ -6,7 +6,10 @@ public class Users : BaseEntity
     public string? LastName { get; set; }
     public string? UserName { get; set; }
     public required string Email { get; set; }
-    public required string Password { get; set; }
-    public bool IsAdmin { get; set; }
+    public required string PasswordHash { get; set; }
 
+    /// <summary>"Admin" or "User"</summary>
+    public string Role { get; set; } = "User";
+
+    public bool IsActive { get; set; } = true;
 }

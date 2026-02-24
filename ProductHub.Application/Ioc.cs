@@ -10,11 +10,10 @@ public static class Ioc
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Services
-
+        services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IProductImageService, ProductImageService>();
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         return services;
     }
-
 }
