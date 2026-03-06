@@ -32,7 +32,8 @@ public class CategoryService : BaseService<Categories, CategoryDto, CategoryResp
         {
             Id = entity.Id,
             Name = entity.Name,
-            Description = entity.Description
+            Description = entity.Description,
+            CreatedDate = entity.CreatedDate
         };
     }
 

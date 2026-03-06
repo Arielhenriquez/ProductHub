@@ -20,8 +20,8 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
-    [SwaggerOperation(Summary = "Gets Paged Products (public)")]
+    [Authorize(Roles = "Admin,User")]
+    [SwaggerOperation(Summary = "Gets Paged Products (requires login)")]
     public async Task<IActionResult> GetPagedProducts([FromQuery] PaginationQuery query, CancellationToken cancellationToken)
     {
         var products = await _productService.GetPagedProducts(query, cancellationToken);
@@ -29,8 +29,8 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [AllowAnonymous]
-    [SwaggerOperation(Summary = "Get a single product by id with images (public)")]
+    [Authorize(Roles = "Admin,User")]
+    [SwaggerOperation(Summary = "Get a single product by id with images (requires login)")]
     public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await _productService.GetByIdAsync(id, cancellationToken);

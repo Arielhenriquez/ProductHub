@@ -13,5 +13,6 @@ public class CategoriesProjections
             Id = category.Id,
             Name = category.Name,
             Description = category.Description,
+            CreatedDate = category.CreatedDate
         };
 }

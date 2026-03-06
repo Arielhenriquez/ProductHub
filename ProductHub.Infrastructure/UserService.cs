@@ -51,33 +51,46 @@ public class UserService : IUserService
         if (user is null)
             throw new NotFoundException(nameof(Users), id);
 
-        return new UserResponseDto
+        return MapToDto(user);
+    }
+
+    public async Task<UserResponseDto> UpdateUserAsync(Guid id, UpdateUserDto dto, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserOrThrowAsync(id, cancellationToken);
+
+        // Name
+        user.FirstName = dto.FirstName.Trim();
+        user.LastName = string.IsNullOrWhiteSpace(dto.LastName) ? null : dto.LastName.Trim();
+
+        // Email — validate uniqueness only when the address actually changes
+        if (!string.Equals(user.Email, dto.Email, StringComparison.OrdinalIgnoreCase))
         {
-            Id = user.Id,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Email = user.Email,
-            Role = user.Role,
-            IsActive = user.IsActive,
-            CreatedDate = user.CreatedDate
-        };
-    }
+            var emailTaken = await _userRepository.Query()
+                .AnyAsync(u => u.Email == dto.Email && !u.IsDeleted && u.Id != id, cancellationToken);
 
-    public async Task UpdateRoleAsync(Guid id, UpdateUserRoleDto dto, CancellationToken cancellationToken = default)
-    {
-        if (dto.Role != "Admin" && dto.Role != "User")
-            throw new BadRequestException("Role must be 'Admin' or 'User'.");
+            if (emailTaken)
+                throw new BadRequestException($"Email '{dto.Email}' is already in use.");
 
-        var user = await GetUserOrThrowAsync(id, cancellationToken);
-        user.Role = dto.Role;
+            user.Email = dto.Email;
+        }
+
+        // Role — optional; validated when provided
+        if (dto.Role is not null)
+        {
+            if (dto.Role != "Admin" && dto.Role != "User")
+                throw new BadRequestException("Role must be 'Admin' or 'User'.");
+
+            user.Role = dto.Role;
+        }
+
+        // Status — optional; updated only when explicitly provided
+        if (dto.IsActive.HasValue)
+            user.IsActive = dto.IsActive.Value;
+
+        user.UpdatedDate = DateTimeOffset.UtcNow;
         await _userRepository.UpdateAsync(user, cancellationToken);
-    }
 
-    public async Task UpdateStatusAsync(Guid id, UpdateUserStatusDto dto, CancellationToken cancellationToken = default)
-    {
-        var user = await GetUserOrThrowAsync(id, cancellationToken);
-        user.IsActive = dto.IsActive;
-        await _userRepository.UpdateAsync(user, cancellationToken);
+        return MapToDto(user);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
@@ -87,6 +100,10 @@ public class UserService : IUserService
         user.DeletedDate = DateTimeOffset.UtcNow;
         await _userRepository.UpdateAsync(user, cancellationToken);
     }
+
+    // ──────────────────────────────────────────
+    // Helpers
+    // ──────────────────────────────────────────
 
     private async Task<Users> GetUserOrThrowAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -98,4 +115,15 @@ public class UserService : IUserService
 
         return user;
     }
+
+    private static UserResponseDto MapToDto(Users user) => new()
+    {
+        Id = user.Id,
+        FirstName = user.FirstName,
+        LastName = user.LastName,
+        Email = user.Email,
+        Role = user.Role,
+        IsActive = user.IsActive,
+        CreatedDate = user.CreatedDate
+    };
 }

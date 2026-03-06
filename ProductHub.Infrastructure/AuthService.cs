@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -23,8 +24,17 @@ public class AuthService : IAuthService
         _jwtSettings = jwtSettings.Value;
     }
 
-    public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto, CancellationToken cancellationToken = default)
+    public async Task<RegisterResponseDto> RegisterAsync(RegisterDto dto, CancellationToken cancellationToken = default)
     {
+        // Validate email format
+        ValidateEmailFormat(dto.Email);
+
+        // Validate password policy
+        var passwordErrors = ValidatePasswordPolicy(dto.Password);
+        if (passwordErrors.Count > 0)
+            throw new BadRequestException(string.Join(" | ", passwordErrors));
+
+        // Check email uniqueness
         var existingUser = await _userRepository.Query()
             .FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted, cancellationToken);
 
@@ -43,11 +53,21 @@ public class AuthService : IAuthService
 
         await _userRepository.AddAsync(user, cancellationToken);
 
-        return BuildAuthResponse(user);
+        return new RegisterResponseDto
+        {
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            Role = user.Role,
+            CreatedDate = user.CreatedDate
+        };
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto, CancellationToken cancellationToken = default)
     {
+        ValidateEmailFormat(dto.Email);
+
         var user = await _userRepository.Query()
             .FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted, cancellationToken);
 
@@ -58,6 +78,40 @@ public class AuthService : IAuthService
             throw new BadRequestException("Your account is disabled. Contact an administrator.");
 
         return BuildAuthResponse(user);
+    }
+
+    // ──────────────────────────────────────────
+    // Helpers
+    // ──────────────────────────────────────────
+
+    private static void ValidateEmailFormat(string email)
+    {
+        try
+        {
+            _ = new MailAddress(email);
+        }
+        catch
+        {
+            throw new BadRequestException($"'{email}' is not a valid email address.");
+        }
+    }
+
+    private static List<string> ValidatePasswordPolicy(string password)
+    {
+        var errors = new List<string>();
+
+        if (password.Length < 8)
+            errors.Add("Password must be at least 8 characters.");
+        if (!password.Any(char.IsUpper))
+            errors.Add("Password must contain at least one uppercase letter.");
+        if (!password.Any(char.IsLower))
+            errors.Add("Password must contain at least one lowercase letter.");
+        if (!password.Any(char.IsDigit))
+            errors.Add("Password must contain at least one number.");
+        if (!password.Any(c => !char.IsLetterOrDigit(c)))
+            errors.Add("Password must contain at least one special character.");
+
+        return errors;
     }
 
     private AuthResponseDto BuildAuthResponse(Users user)
@@ -81,7 +135,7 @@ public class AuthService : IAuthService
 
     private string GenerateJwtToken(Users user, int expireMinutes)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret.Trim()));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]

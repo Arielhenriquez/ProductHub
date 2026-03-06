@@ -36,20 +36,12 @@ public class UsersController : ControllerBase
         return Ok(BaseResponse.Ok(result));
     }
 
-    [HttpPut("{id}/role")]
-    [SwaggerOperation(Summary = "Update a user's role (Admin only)")]
-    public async Task<IActionResult> UpdateRole([FromRoute] Guid id, [FromBody] UpdateUserRoleDto dto, CancellationToken cancellationToken)
+    [HttpPut("{id}")]
+    [SwaggerOperation(Summary = "Update a user's name, email, role and/or status (Admin only)")]
+    public async Task<IActionResult> UpdateUser([FromRoute] Guid id, [FromBody] UpdateUserDto dto, CancellationToken cancellationToken)
     {
-        await _userService.UpdateRoleAsync(id, dto, cancellationToken);
-        return Ok(BaseResponse.Updated(dto));
-    }
-
-    [HttpPut("{id}/status")]
-    [SwaggerOperation(Summary = "Enable or disable a user account (Admin only)")]
-    public async Task<IActionResult> UpdateStatus([FromRoute] Guid id, [FromBody] UpdateUserStatusDto dto, CancellationToken cancellationToken)
-    {
-        await _userService.UpdateStatusAsync(id, dto, cancellationToken);
-        return Ok(BaseResponse.Updated(dto));
+        var result = await _userService.UpdateUserAsync(id, dto, cancellationToken);
+        return Ok(BaseResponse.Updated(result));
     }
 
     [HttpDelete("{id}")]

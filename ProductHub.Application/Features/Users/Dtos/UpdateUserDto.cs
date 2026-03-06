@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ProductHub.Application.Features.Auth.Dtos;
+namespace ProductHub.Application.Features.Users.Dtos;
 
-public class RegisterDto
+public class UpdateUserDto
 {
     [Required(ErrorMessage = "First name is required.")]
     [MaxLength(100, ErrorMessage = "First name cannot exceed 100 characters.")]
@@ -16,7 +16,9 @@ public class RegisterDto
     [MaxLength(200, ErrorMessage = "Email cannot exceed 200 characters.")]
     public required string Email { get; set; }
 
-    [Required(ErrorMessage = "Password is required.")]
-    [MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
-    public required string Password { get; set; }
+    /// <summary>"Admin" or "User". If omitted, the current role is kept.</summary>
+    public string? Role { get; set; }
+
+    /// <summary>If omitted, the current status is kept.</summary>
+    public bool? IsActive { get; set; }
 }

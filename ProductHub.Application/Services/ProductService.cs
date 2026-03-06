@@ -50,6 +50,7 @@ public class ProductService : BaseService<Products, CreateProductDto, ProductRes
             Price = entity.Price,
             IsActive = entity.IsActive,
             QuantityInStock = entity.QuantityInStock,
+            CreatedDate = entity.CreatedDate,
             CategoryResponses = entity.Category == null
                 ? new List<CategoryResponseDto>()
                 : new List<CategoryResponseDto>

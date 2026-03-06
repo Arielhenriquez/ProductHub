@@ -20,11 +20,11 @@ public class AuthController : ControllerBase
 
     [HttpPost("register")]
     [AllowAnonymous]
-    [SwaggerOperation(Summary = "Register a new user (role: User by default)")]
+    [SwaggerOperation(Summary = "Register a new user. Returns user data (no token). Use /login to get a token.")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto, CancellationToken cancellationToken)
     {
         var result = await _authService.RegisterAsync(dto, cancellationToken);
-        return Ok(BaseResponse.Created(result));
+        return StatusCode(201, BaseResponse.Created(result));
     }
 
     [HttpPost("login")]

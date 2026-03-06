@@ -20,8 +20,8 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("paged")]
-    [AllowAnonymous]
-    [SwaggerOperation(Summary = "Gets Paged Categories (public)")]
+    [Authorize(Roles = "Admin,User")]
+    [SwaggerOperation(Summary = "Gets Paged Categories (requires login)")]
     public async Task<IActionResult> GetPagedCategories([FromQuery] PaginationQuery query, CancellationToken cancellationToken)
     {
         var collaborators = await _categoryService.GetPagedCategories(query, cancellationToken);
@@ -29,8 +29,8 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [AllowAnonymous]
-    [SwaggerOperation(Summary = "Get a single category by id (public)")]
+    [Authorize(Roles = "Admin,User")]
+    [SwaggerOperation(Summary = "Get a single category by id (requires login)")]
     public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await _categoryService.GetByIdAsync(id, cancellationToken);
@@ -57,9 +57,7 @@ public class CategoriesController : ControllerBase
 
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
-    [SwaggerOperation(
-         Summary = "Deletes a category (soft delete, Admin only)"
-         )]
+    [SwaggerOperation(Summary = "Deletes a category (soft delete, Admin only)")]
     public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         await _categoryService.DeleteAsync(id, cancellationToken);

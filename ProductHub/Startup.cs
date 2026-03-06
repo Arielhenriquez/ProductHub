@@ -54,7 +54,10 @@ public class Startup
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = jwtSettings.Issuer,
                 ValidAudience = jwtSettings.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+                // .Trim() prevents whitespace encoding mismatches (common "invalid signature" cause)
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret.Trim())),
+                // Zero clock skew: token expires exactly when specified, no grace period
+                ClockSkew = TimeSpan.Zero
             };
 
             options.Events = new JwtBearerEvents

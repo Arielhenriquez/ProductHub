@@ -15,6 +15,7 @@ public static class ProductsProjections
         Price = product.Price,
         IsActive = product.IsActive,
         QuantityInStock = product.QuantityInStock,
+        CreatedDate = product.CreatedDate,
         CategoryResponses = product.Category == null
            ? new List<CategoryResponseDto>()
            : new List<CategoryResponseDto>

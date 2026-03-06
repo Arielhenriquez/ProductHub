@@ -20,6 +20,10 @@ public static class Ioc
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
 
+        // Seeds a default Admin on first startup
+        services.AddHostedService<AdminSeederService>();
+
         return services;
     }
 }
+
