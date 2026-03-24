@@ -35,4 +35,22 @@ public class AuthController : ControllerBase
         var result = await _authService.LoginAsync(dto, cancellationToken);
         return Ok(BaseResponse.Ok(result));
     }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [SwaggerOperation(Summary = "Request a password reset email. Always returns a generic response for security.")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto, CancellationToken cancellationToken)
+    {
+        await _authService.ForgotPasswordAsync(dto, cancellationToken);
+        return Ok(new { message = "If the email exists, a password reset link has been sent." });
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [SwaggerOperation(Summary = "Reset password using a token received via email.")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto, CancellationToken cancellationToken)
+    {
+        await _authService.ResetPasswordAsync(dto, cancellationToken);
+        return Ok(new { message = "Password has been reset successfully." });
+    }
 }

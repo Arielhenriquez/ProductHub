@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProductHub.Application.Interfaces;
+using ProductHub.Domain.Settings;
 using ProductHub.Infrastructure.Persistence.Context;
 using ProductHub.Infrastructure.Repositories;
 
@@ -14,9 +15,12 @@ public static class Ioc
         string connectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<ProductHubContext>(options => options.UseSqlServer(connectionString));
 
+        services.Configure<SmtpSettings>(configuration.GetSection("SmtpSettings"));
+
         services.AddTransient<IDbContext, ProductHubContext>();
         services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
         services.AddScoped<IBlobService, BlobService>();
+        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
 
