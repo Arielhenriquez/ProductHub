@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProductHub.Application.Interfaces;
@@ -15,7 +15,7 @@ public static class Ioc
         string connectionString = configuration.GetConnectionString("DefaultConnection")!;
         services.AddDbContext<ProductHubContext>(options => options.UseSqlServer(connectionString));
 
-        services.Configure<SmtpSettings>(configuration.GetSection("SmtpSettings"));
+        services.Configure<SendGridSettings>(configuration.GetSection("SendGrid"));
 
         services.AddTransient<IDbContext, ProductHubContext>();
         services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
