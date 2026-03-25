@@ -1,11 +1,8 @@
 namespace ProductHub.Domain.Settings;
 
-public class SmtpSettings
+public class SendGridSettings
 {
-    public string Host { get; set; } = string.Empty;
-    public int Port { get; set; } = 2525;
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
+    public string ApiKey { get; set; } = string.Empty;
     public string FromEmail { get; set; } = string.Empty;
     public string FromName { get; set; } = string.Empty;
 }
