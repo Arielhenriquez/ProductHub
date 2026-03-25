@@ -17,11 +17,11 @@ var app = builder.Build();
 
 setup.SetupMiddlewares(app);
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// Redirect root "/" to Swagger UI
+app.MapGet("/", () => Results.Redirect("/swagger"));
 
 app.UseHttpsRedirection();
 
