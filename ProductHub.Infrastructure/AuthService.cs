@@ -3,6 +3,7 @@ using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using ProductHub.Application.Common;
@@ -19,6 +20,7 @@ public class AuthService : IAuthService
     private readonly IBaseRepository<Users> _userRepository;
     private readonly JwtSettings _jwtSettings;
     private readonly IEmailService _emailService;
+    private readonly string _frontendBaseUrl;
 
     // Reset-password token is its own short-lived JWT.  We re-use the same
     // signing secret as the main JwtSettings but distinguish it with a custom
@@ -29,11 +31,13 @@ public class AuthService : IAuthService
     public AuthService(
         IBaseRepository<Users> userRepository,
         IOptions<JwtSettings> jwtSettings,
-        IEmailService emailService)
+        IEmailService emailService,
+        IConfiguration configuration)
     {
         _userRepository = userRepository;
         _jwtSettings = jwtSettings.Value;
         _emailService = emailService;
+        _frontendBaseUrl = configuration["FrontendBaseUrl"] ?? "http://localhost:4200";
     }
 
     // ──────────────────────────────────────────
@@ -106,25 +110,19 @@ public class AuthService : IAuthService
 
     public async Task ForgotPasswordAsync(ForgotPasswordDto dto, CancellationToken cancellationToken = default)
     {
-        // Always return success to avoid exposing whether the email exists
         var user = await _userRepository.Query()
-            .FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted, cancellationToken);
-
-        if (user is null)
-            return; // Silently ignore: response is generic
+            .FirstOrDefaultAsync(u => u.Email == dto.Email && !u.IsDeleted, cancellationToken)
+            ?? throw new NotFoundException("No encontramos ninguna cuenta asociada a ese correo electrónico.");
 
         var resetToken = GenerateResetToken(user.Id);
-        var resetLink = $"http://localhost:4200/reset-password?token={resetToken}";
+        var resetLink = $"{_frontendBaseUrl}/reset-password?token={resetToken}";
 
-        var subject = "Reset your password";
-        var body = $@"
-            <p>Hello {user.FirstName},</p>
-            <p>We received a request to reset your ProductHub password.</p>
-            <p>Click the link below to reset your password. This link expires in {ResetTokenExpiryMinutes} minutes.</p>
-            <p><a href=""{resetLink}"">Reset My Password</a></p>
-            <p>If you did not request a password reset, you can safely ignore this email.</p>
-            <br/>
-            <p>— The ProductHub Team</p>";
+        var subject = "Restablece tu contraseña - ProductHub";
+        var body = LoadEmailTemplate("reset-password.html")
+            .Replace("{{FirstName}}", user.FirstName)
+            .Replace("{{ResetLink}}", resetLink)
+            .Replace("{{ExpiryMinutes}}", ResetTokenExpiryMinutes.ToString())
+            .Replace("{{Year}}", DateTime.UtcNow.Year.ToString());
 
         await _emailService.SendAsync(user.Email, subject, body, cancellationToken);
     }
@@ -293,5 +291,16 @@ public class AuthService : IAuthService
         {
             throw new BadRequestException("Invalid or expired password reset token.");
         }
+    }
+
+    private static string LoadEmailTemplate(string fileName)
+    {
+        var assembly = typeof(AuthService).Assembly;
+        var resourceName = assembly.GetManifestResourceNames()
+            .Single(n => n.EndsWith(fileName, StringComparison.OrdinalIgnoreCase));
+
+        using var stream = assembly.GetManifestResourceStream(resourceName)!;
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
     }
 }

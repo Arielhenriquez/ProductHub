@@ -22,4 +22,8 @@
     <ProjectReference Include="..\ProductHub.Application\ProductHub.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\reset-password.html" />
+  </ItemGroup>
+
 </Project>
