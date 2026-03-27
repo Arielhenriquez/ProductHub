@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto, CancellationToken cancellationToken)
     {
         await _authService.ForgotPasswordAsync(dto, cancellationToken);
-        return Ok(new { message = "If the email exists, a password reset link has been sent." });
+        return Ok(new { message = "Te enviamos un correo con el enlace para restablecer tu contraseña. Revisa tu bandeja de entrada." });
     }
 
     [HttpPost("reset-password")]
