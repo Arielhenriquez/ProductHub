@@ -20,7 +20,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin,User")]
+    [AllowAnonymous]
     [SwaggerOperation(Summary = "Gets Paged Products (requires login)")]
     public async Task<IActionResult> GetPagedProducts([FromQuery] PaginationQuery query, CancellationToken cancellationToken)
     {
@@ -29,7 +29,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,User")]
+    [AllowAnonymous]
     [SwaggerOperation(Summary = "Get a single product by id with images (requires login)")]
     public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
