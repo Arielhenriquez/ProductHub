@@ -20,7 +20,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("paged")]
-    [Authorize(Roles = "Admin,User")]
+    [AllowAnonymous]
     [SwaggerOperation(Summary = "Gets Paged Categories (requires login)")]
     public async Task<IActionResult> GetPagedCategories([FromQuery] PaginationQuery query, CancellationToken cancellationToken)
     {
@@ -29,7 +29,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,User")]
+    [AllowAnonymous]
     [SwaggerOperation(Summary = "Get a single category by id (requires login)")]
     public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
